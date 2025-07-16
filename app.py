@@ -1,9 +1,11 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, redirect, url_for, session
 from datetime import datetime
-from flask import redirect, url_for, session
+import smtplib
+from email.mime.text import MIMEText
+import os
 
 app = Flask(__name__)
-app.secret_key = '123456'  # 請換成你自己的安全密鑰
+app.secret_key = 'your_secret_key'
 
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
@@ -63,6 +65,28 @@ HTML_TEMPLATE = '''
 </html>
 '''
 
+def send_order_email(order_text):
+    sender_email = os.getenv("SENDER_EMAIL")
+    app_password = os.getenv("APP_PASSWORD")
+    receiver_email = os.getenv("RECEIVER_EMAIL")
+
+    if not (sender_email and app_password and receiver_email):
+        print("❌ 未設定 Gmail 環境變數，無法寄送 email")
+        return
+
+    msg = MIMEText(order_text)
+    msg['Subject'] = "🛒 巴渝商店新訂單通知"
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender_email, app_password)
+            server.send_message(msg)
+            print("✅ 訂單 Email 已寄出！")
+    except Exception as e:
+        print("❌ 寄信錯誤：", e)
+
 @app.route('/', methods=['GET', 'POST'])
 def shop():
     submitted = session.pop('submitted', False)
@@ -88,14 +112,19 @@ def shop():
             order_lines.append(f"備註：{notes}")
         order_lines.append('-' * 30)
 
+        order_text = '\n'.join(order_lines)
+
+        # 本地記錄
         with open('orders.txt', 'a', encoding='utf-8') as f:
-            f.write('\n'.join(order_lines) + '\n')
+            f.write(order_text + '\n')
+
+        # 寄送 Email
+        send_order_email(order_text)
 
         session['submitted'] = True
         return redirect(url_for('shop'))
 
     return render_template_string(HTML_TEMPLATE, submitted=submitted)
-
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080)
