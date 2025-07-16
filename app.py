@@ -12,7 +12,7 @@ HTML_TEMPLATE = '''
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>巴渝商店</title>
+    <title>巴渝臘肉訂購選單</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .alert-top {
@@ -27,7 +27,7 @@ HTML_TEMPLATE = '''
     {% if submitted %}
     <div class="alert alert-success alert-top">✅ 訂單已送出成功！</div>
     {% endif %}
-    <h1 class="text-center mb-4">🛒 巴渝商店</h1>
+    <h1 class="text-center mb-4">🛒 巴巴渝臘肉訂購選單</h1>
     <form method="POST" class="bg-white p-4 rounded shadow-sm">
         <div class="mb-3">
             <label class="form-label">姓名 *</label>
